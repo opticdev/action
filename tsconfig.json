@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "es2017",
+    "lib": ["es2017", "dom", "es2019"],
+    "outDir": "build",
+    "resolveJsonModule": true,
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"],
+  "typeRoots": [
+    "./src/models",
+    "./types.d.ts",
+    "./node_modules/@types",
+    "../../node_modules/@types"
+  ]
+}

@@ -1,2 +1,3 @@
 # action
-GitHub Action for Optic
+
+The GitHub Action for Optic
