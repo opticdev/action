@@ -28,7 +28,7 @@ jobs:
       - run: yarn run ci:build
 
       # See https://github.com/actions/checkout/blob/main/.github/workflows/check-dist.yml
-      - name: Compare the expected and actual dist/ directories
+      - name: Compare the expected and actual build/ directories
         run: |
           if [ "$(git diff --ignore-space-at-eol build/ | wc -l)" -gt "0" ]; then
             echo "Detected uncommitted changes after build.  See status below:"
