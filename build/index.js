@@ -33,8 +33,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runAction = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
-const token = core.getInput("token");
-const eventName = process.env.GITHUB_EVENT_NAME;
 async function execCommand(...args) {
     try {
         await exec.exec(...args);
@@ -47,41 +45,42 @@ async function execCommand(...args) {
         return false;
     }
 }
-async function runAction() {
-    const valid = await verifyInput();
+async function runAction(token, eventName, headRef) {
+    const valid = await verifyInput(token, eventName);
     if (!valid) {
-        return process.exit(1);
+        return 1;
     }
     const installed = await install();
     if (!installed) {
-        return process.exit(1);
+        return 1;
     }
     let from = "";
     if (eventName === "pull_request") {
-        from = process.env.GITHUB_HEAD_REF || "";
+        from = headRef || "";
         if (!(await ensureRef(from))) {
             core.error(`Unable to fetch ${from}`);
-            return process.exit(1);
+            return 1;
         }
     }
     else if (eventName === "push") {
         from = "HEAD~1";
         if (!(await deepen())) {
             core.error("Unable to fetch HEAD~1");
-            return process.exit(1);
+            return 1;
         }
     }
     if (from === "") {
         core.error("Unable to determine base for comparison.");
-        return process.exit(1);
+        return 1;
     }
-    const comparisonRun = await diffAll(from);
+    const comparisonRun = await diffAll(token, from);
     if (!comparisonRun) {
-        return process.exit(1);
+        return 1;
     }
+    return 0;
 }
 exports.runAction = runAction;
-async function verifyInput() {
+async function verifyInput(token, eventName) {
     if (!token) {
         core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
         return false;
@@ -101,24 +100,75 @@ async function install() {
     ]);
 }
 async function ensureRef(ref) {
-    if (!(await execCommand(`git fetch --no-tags --depth=1 origin ${ref}`))) {
+    if (!(await execCommand("git", [
+        "fetch",
+        "--no-tags",
+        "--depth=1",
+        "origin",
+        ref,
+    ]))) {
         return false;
     }
     return true;
 }
 async function deepen() {
-    if (!(await execCommand(`git fetch --deepen 1`))) {
+    if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
         return false;
     }
     return true;
 }
-async function diffAll(from) {
+async function diffAll(token, from) {
     core.info("Running Optic diff-all");
     return execCommand("optic", ["diff-all", "--compare-from", from, "--check"], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
     });
 }
 //# sourceMappingURL=action.js.map
+
+/***/ }),
+
+/***/ 667:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(186));
+const action_1 = __nccwpck_require__(834);
+const token = core.getInput("token");
+const eventName = process.env.GITHUB_EVENT_NAME;
+const headRef = process.env.GITHUB_REF;
+(0, action_1.runAction)(token, eventName, headRef)
+    .then((exitCode) => {
+    return process.exit(exitCode);
+})
+    .catch(() => {
+    return process.exit(1);
+});
+//# sourceMappingURL=index.js.map
 
 /***/ }),
 
@@ -4226,24 +4276,12 @@ module.exports = require("util");
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const action_1 = __nccwpck_require__(834);
-(0, action_1.runAction)()
-    .then(() => {
-    return process.exit(0);
-})
-    .catch(() => {
-    return process.exit(1);
-});
-//# sourceMappingURL=index.js.map
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(667);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;

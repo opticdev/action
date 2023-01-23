@@ -26,8 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runAction = void 0;
 const core = __importStar(require("@actions/core"));
 const exec = __importStar(require("@actions/exec"));
-const token = core.getInput("token");
-const eventName = process.env.GITHUB_EVENT_NAME;
 async function execCommand(...args) {
     try {
         await exec.exec(...args);
@@ -40,41 +38,42 @@ async function execCommand(...args) {
         return false;
     }
 }
-async function runAction() {
-    const valid = await verifyInput();
+async function runAction(token, eventName, headRef) {
+    const valid = await verifyInput(token, eventName);
     if (!valid) {
-        return process.exit(1);
+        return 1;
     }
     const installed = await install();
     if (!installed) {
-        return process.exit(1);
+        return 1;
     }
     let from = "";
     if (eventName === "pull_request") {
-        from = process.env.GITHUB_HEAD_REF || "";
+        from = headRef || "";
         if (!(await ensureRef(from))) {
             core.error(`Unable to fetch ${from}`);
-            return process.exit(1);
+            return 1;
         }
     }
     else if (eventName === "push") {
         from = "HEAD~1";
         if (!(await deepen())) {
             core.error("Unable to fetch HEAD~1");
-            return process.exit(1);
+            return 1;
         }
     }
     if (from === "") {
         core.error("Unable to determine base for comparison.");
-        return process.exit(1);
+        return 1;
     }
-    const comparisonRun = await diffAll(from);
+    const comparisonRun = await diffAll(token, from);
     if (!comparisonRun) {
-        return process.exit(1);
+        return 1;
     }
+    return 0;
 }
 exports.runAction = runAction;
-async function verifyInput() {
+async function verifyInput(token, eventName) {
     if (!token) {
         core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
         return false;
@@ -94,18 +93,24 @@ async function install() {
     ]);
 }
 async function ensureRef(ref) {
-    if (!(await execCommand(`git fetch --no-tags --depth=1 origin ${ref}`))) {
+    if (!(await execCommand("git", [
+        "fetch",
+        "--no-tags",
+        "--depth=1",
+        "origin",
+        ref,
+    ]))) {
         return false;
     }
     return true;
 }
 async function deepen() {
-    if (!(await execCommand(`git fetch --deepen 1`))) {
+    if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
         return false;
     }
     return true;
 }
-async function diffAll(from) {
+async function diffAll(token, from) {
     core.info("Running Optic diff-all");
     return execCommand("optic", ["diff-all", "--compare-from", from, "--check"], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
