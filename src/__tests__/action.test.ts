@@ -9,6 +9,7 @@ test("invalid input", async () => {
     "github-token",
     "",
     "",
+    undefined,
     "owner",
     "repo",
     "abc123"
@@ -24,6 +25,7 @@ test("failed install", async () => {
     "github-token",
     "push",
     "refs/heads/main",
+    undefined,
     "owner",
     "repo",
     "abc123"
@@ -33,17 +35,17 @@ test("failed install", async () => {
 });
 
 test("pull_request event", async () => {
-  const ref = "refs/pulls/1/merge";
   const assertInstall = mockInstall();
-  const assertEnsureRef = mockEnsureRef(ref);
-  const assertDiffAll = mockDiffAll("token", ref);
+  const assertEnsureRef = mockEnsureRef("refs/heads/main");
+  const assertDiffAll = mockDiffAll("token", "refs/heads/main");
   const assertGitHubComment = mockGitHubComment();
 
   const exitCode = await runAction(
     "optic-token",
     "github-token",
     "pull_request",
-    ref,
+    "refs/pulls/1/merge",
+    "refs/heads/main",
     "owner",
     "repo",
     "abc123"
@@ -65,6 +67,7 @@ test("push event", async () => {
     "github-token",
     "push",
     "refs/heads/main",
+    undefined,
     "owner",
     "repo",
     "abc123"

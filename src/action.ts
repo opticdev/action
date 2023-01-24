@@ -21,6 +21,7 @@ export async function runAction(
   githubToken: string,
   eventName: string | undefined,
   headRef: string | undefined,
+  baseRef: string | undefined,
   owner: string | undefined,
   repo: string | undefined,
   sha: string | undefined
@@ -48,7 +49,7 @@ export async function runAction(
 
   let from = "";
   if (eventName === "pull_request") {
-    from = headRef || "";
+    from = baseRef || "";
 
     if (!(await ensureRef(from))) {
       core.error(`Unable to fetch ${from}`);
