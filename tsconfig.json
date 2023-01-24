@@ -13,7 +13,8 @@
     "lib": ["es2017", "dom", "es2019"],
     "outDir": "build",
     "resolveJsonModule": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "incremental": true
   },
   "include": ["src/**/*"],
   "typeRoots": [
