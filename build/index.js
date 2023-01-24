@@ -45,10 +45,19 @@ async function execCommand(...args) {
         return false;
     }
 }
-async function runAction(token, eventName, headRef) {
-    const valid = await verifyInput(token, eventName);
+async function runAction(opticToken, githubToken, eventName, headRef, owner, repo, sha) {
+    const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
         return 1;
+    }
+    let pr = "";
+    if (eventName === "pull_request") {
+        const prFromRef = headRef === null || headRef === void 0 ? void 0 : headRef.split("/")[2];
+        if (!prFromRef) {
+            core.error("Could not read PR number from ref");
+            return 1;
+        }
+        pr = prFromRef;
     }
     const installed = await install();
     if (!installed) {
@@ -73,20 +82,34 @@ async function runAction(token, eventName, headRef) {
         core.error("Unable to determine base for comparison.");
         return 1;
     }
-    const comparisonRun = await diffAll(token, from);
+    const comparisonRun = await diffAll(opticToken, from);
     if (!comparisonRun) {
         return 1;
+    }
+    if (eventName === "pull_request") {
+        const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
+        if (!commentResult) {
+            return 1;
+        }
     }
     return 0;
 }
 exports.runAction = runAction;
-async function verifyInput(token, eventName) {
+function verifyInput(token, eventName, owner, repo) {
     if (!token) {
         core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
         return false;
     }
     if (eventName !== "push" && eventName !== "pull_request") {
         core.error("Only 'push' and 'pull_request' events are supported.");
+        return false;
+    }
+    if (!owner) {
+        core.error("Repository owner is required but was not retreived from the environment");
+        return false;
+    }
+    if (!repo) {
+        core.error("Repo is required but was not retreived from the environment");
         return false;
     }
     return true;
@@ -123,6 +146,25 @@ async function diffAll(token, from) {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
     });
 }
+async function prComment(githubToken, owner, repo, pr, sha) {
+    core.info("Commenting on PR");
+    return execCommand("optic", [
+        "ci",
+        "comment",
+        "--provider",
+        "github",
+        "--owner",
+        owner,
+        "--repo",
+        repo,
+        "--pull-request",
+        pr,
+        "--sha",
+        sha,
+    ], {
+        env: Object.assign(Object.assign({}, process.env), { GITHUB_TOKEN: githubToken }),
+    });
+}
 //# sourceMappingURL=action.js.map
 
 /***/ }),
@@ -155,13 +197,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const action_1 = __nccwpck_require__(834);
-const token = core.getInput("token");
+const opticToken = core.getInput("optic_token");
+const githubToken = core.getInput("github_token");
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
-(0, action_1.runAction)(token, eventName, headRef)
+const owner = process.env.GITHUB_REPOSITORY_OWNER;
+const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
+const sha = process.env.GITHUB_SHA;
+(0, action_1.runAction)(opticToken, githubToken, eventName, headRef, owner, repo, sha)
     .then((exitCode) => {
     return process.exit(exitCode);
 })
