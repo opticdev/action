@@ -49,9 +49,10 @@ export async function runAction(
 
   let from = "";
   if (eventName === "pull_request") {
-    from = baseRef || "";
+    const fromBranch = baseRef || "";
+    from = `origin/${fromBranch}`;
 
-    if (!(await ensureRef(from))) {
+    if (!(await ensureRef(fromBranch))) {
       core.error(`Unable to fetch ${from}`);
       return 1;
     }

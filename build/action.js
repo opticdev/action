@@ -58,8 +58,9 @@ async function runAction(opticToken, githubToken, eventName, headRef, baseRef, o
     }
     let from = "";
     if (eventName === "pull_request") {
-        from = baseRef || "";
-        if (!(await ensureRef(from))) {
+        const fromBranch = baseRef || "";
+        from = `origin/${fromBranch}`;
+        if (!(await ensureRef(fromBranch))) {
             core.error(`Unable to fetch ${from}`);
             return 1;
         }

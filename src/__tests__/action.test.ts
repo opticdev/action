@@ -36,8 +36,8 @@ test("failed install", async () => {
 
 test("pull_request event", async () => {
   const assertInstall = mockInstall();
-  const assertEnsureRef = mockEnsureRef("refs/heads/main");
-  const assertDiffAll = mockDiffAll("token", "refs/heads/main");
+  const assertEnsureRef = mockEnsureRef("main");
+  const assertDiffAll = mockDiffAll("token", "origin/main");
   const assertGitHubComment = mockGitHubComment();
 
   const exitCode = await runAction(
@@ -45,7 +45,7 @@ test("pull_request event", async () => {
     "github-token",
     "pull_request",
     "refs/pulls/1/merge",
-    "refs/heads/main",
+    "main",
     "owner",
     "repo",
     "abc123"

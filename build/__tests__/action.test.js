@@ -38,10 +38,10 @@ test("failed install", async () => {
 });
 test("pull_request event", async () => {
     const assertInstall = mockInstall();
-    const assertEnsureRef = mockEnsureRef("refs/heads/main");
-    const assertDiffAll = mockDiffAll("token", "refs/heads/main");
+    const assertEnsureRef = mockEnsureRef("main");
+    const assertDiffAll = mockDiffAll("token", "origin/main");
     const assertGitHubComment = mockGitHubComment();
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "pull_request", "refs/pulls/1/merge", "refs/heads/main", "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "pull_request", "refs/pulls/1/merge", "main", "owner", "repo", "abc123");
     expect(exitCode).toBe(0);
     assertInstall();
     assertEnsureRef();
