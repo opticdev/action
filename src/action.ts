@@ -17,13 +17,28 @@ async function execCommand(
 }
 
 export async function runAction(
-  token: string,
+  opticToken: string,
+  githubToken: string,
   eventName: string | undefined,
-  headRef: string | undefined
+  headRef: string | undefined,
+  owner: string | undefined,
+  repo: string | undefined,
+  sha: string | undefined
 ): Promise<number> {
-  const valid = await verifyInput(token, eventName);
+  const valid = verifyInput(opticToken, eventName, owner, repo);
   if (!valid) {
     return 1;
+  }
+
+  let pr = "";
+  if (eventName === "pull_request") {
+    const prFromRef = headRef?.split("/")[2];
+    if (!prFromRef) {
+      core.error("Could not read PR number from ref");
+      return 1;
+    }
+
+    pr = prFromRef;
   }
 
   const installed = await install();
@@ -52,18 +67,33 @@ export async function runAction(
     return 1;
   }
 
-  const comparisonRun = await diffAll(token, from);
+  const comparisonRun = await diffAll(opticToken, from);
   if (!comparisonRun) {
     return 1;
+  }
+
+  if (eventName === "pull_request") {
+    const commentResult = await prComment(
+      githubToken,
+      owner || "",
+      repo || "",
+      pr || "",
+      sha || ""
+    );
+    if (!commentResult) {
+      return 1;
+    }
   }
 
   return 0;
 }
 
-async function verifyInput(
+function verifyInput(
   token: string,
-  eventName: string | undefined
-): Promise<boolean> {
+  eventName: string | undefined,
+  owner: string | undefined,
+  repo: string | undefined
+): boolean {
   if (!token) {
     core.error(
       "No token was provided. You can generate a token through our app at https://app.useoptic.com"
@@ -73,6 +103,18 @@ async function verifyInput(
 
   if (eventName !== "push" && eventName !== "pull_request") {
     core.error("Only 'push' and 'pull_request' events are supported.");
+    return false;
+  }
+
+  if (!owner) {
+    core.error(
+      "Repository owner is required but was not retreived from the environment"
+    );
+    return false;
+  }
+
+  if (!repo) {
+    core.error("Repo is required but was not retreived from the environment");
     return false;
   }
 
@@ -121,4 +163,38 @@ async function diffAll(token: string, from: string): Promise<boolean> {
       OPTIC_TOKEN: token,
     },
   });
+}
+
+async function prComment(
+  githubToken: string,
+  owner: string,
+  repo: string,
+  pr: string,
+  sha: string
+): Promise<boolean> {
+  core.info("Commenting on PR");
+
+  return execCommand(
+    "optic",
+    [
+      "ci",
+      "comment",
+      "--provider",
+      "github",
+      "--owner",
+      owner,
+      "--repo",
+      repo,
+      "--pull-request",
+      pr,
+      "--sha",
+      sha,
+    ],
+    {
+      env: {
+        ...process.env,
+        GITHUB_TOKEN: githubToken,
+      },
+    }
+  );
 }

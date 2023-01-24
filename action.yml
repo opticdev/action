@@ -1,8 +1,11 @@
 name: "Optic"
 description: "Run Optic against the current commit"
 inputs:
-  token:
+  optic_token:
     description: "Your organization's Optic token"
+    required: true
+  github_token:
+    description: "A GitHub token that can append comments to a PR"
     required: true
 runs:
   using: "node16"
