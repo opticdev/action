@@ -38,7 +38,7 @@ async function execCommand(...args) {
         return false;
     }
 }
-async function runAction(opticToken, githubToken, eventName, headRef, owner, repo, sha) {
+async function runAction(opticToken, githubToken, eventName, headRef, baseRef, owner, repo, sha) {
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
         return 1;
@@ -58,7 +58,7 @@ async function runAction(opticToken, githubToken, eventName, headRef, owner, rep
     }
     let from = "";
     if (eventName === "pull_request") {
-        from = headRef || "";
+        from = baseRef || "";
         if (!(await ensureRef(from))) {
             core.error(`Unable to fetch ${from}`);
             return 1;

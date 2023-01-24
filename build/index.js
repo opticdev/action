@@ -45,7 +45,7 @@ async function execCommand(...args) {
         return false;
     }
 }
-async function runAction(opticToken, githubToken, eventName, headRef, owner, repo, sha) {
+async function runAction(opticToken, githubToken, eventName, headRef, baseRef, owner, repo, sha) {
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
         return 1;
@@ -65,7 +65,7 @@ async function runAction(opticToken, githubToken, eventName, headRef, owner, rep
     }
     let from = "";
     if (eventName === "pull_request") {
-        from = headRef || "";
+        from = baseRef || "";
         if (!(await ensureRef(from))) {
             core.error(`Unable to fetch ${from}`);
             return 1;
@@ -205,10 +205,11 @@ const opticToken = core.getInput("optic_token");
 const githubToken = core.getInput("github_token");
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
+const baseRef = process.env.GITHUB_BASE_REF;
 const owner = process.env.GITHUB_REPOSITORY_OWNER;
 const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
 const sha = process.env.GITHUB_SHA;
-(0, action_1.runAction)(opticToken, githubToken, eventName, headRef, owner, repo, sha)
+(0, action_1.runAction)(opticToken, githubToken, eventName, headRef, baseRef, owner, repo, sha)
     .then((exitCode) => {
     return process.exit(exitCode);
 })

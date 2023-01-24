@@ -27,22 +27,21 @@ const action_1 = require("../action");
 const exec = __importStar(require("@actions/exec"));
 jest.mock("@actions/exec");
 test("invalid input", async () => {
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "", "", "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "", "", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(1);
 });
 test("failed install", async () => {
     const assertFailedInstall = mockFailedInstall();
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(1);
     assertFailedInstall();
 });
 test("pull_request event", async () => {
-    const ref = "refs/pulls/1/merge";
     const assertInstall = mockInstall();
-    const assertEnsureRef = mockEnsureRef(ref);
-    const assertDiffAll = mockDiffAll("token", ref);
+    const assertEnsureRef = mockEnsureRef("refs/heads/main");
+    const assertDiffAll = mockDiffAll("token", "refs/heads/main");
     const assertGitHubComment = mockGitHubComment();
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "pull_request", ref, "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "pull_request", "refs/pulls/1/merge", "refs/heads/main", "owner", "repo", "abc123");
     expect(exitCode).toBe(0);
     assertInstall();
     assertEnsureRef();
@@ -53,7 +52,7 @@ test("push event", async () => {
     const assertInstall = mockInstall();
     const assertDeepen = mockDeepen();
     const assertDiffAll = mockDiffAll("optic-token", "HEAD~1");
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(0);
     assertInstall();
     assertDeepen();
