@@ -70,9 +70,6 @@ export async function runAction(
   }
 
   const comparisonRun = await diffAll(opticToken, from);
-  if (!comparisonRun) {
-    return 1;
-  }
 
   if (eventName === "pull_request") {
     const commentResult = await prComment(
@@ -85,6 +82,10 @@ export async function runAction(
     if (!commentResult) {
       return 1;
     }
+  }
+
+  if (!comparisonRun) {
+    return 1;
   }
 
   return 0;
