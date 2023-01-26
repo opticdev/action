@@ -7,6 +7,7 @@ test("invalid input", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "true",
     "",
     "",
     undefined,
@@ -23,6 +24,7 @@ test("failed install", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "true",
     "push",
     "refs/heads/main",
     undefined,
@@ -43,6 +45,7 @@ test("pull_request event", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "true",
     "pull_request",
     "refs/pulls/1/merge",
     "main",
@@ -65,6 +68,51 @@ test("push event", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "true",
+    "push",
+    "refs/heads/main",
+    undefined,
+    "owner",
+    "repo",
+    "abc123"
+  );
+  expect(exitCode).toBe(0);
+  assertInstall();
+  assertDeepen();
+  assertDiffAll();
+});
+
+test("push event with standards failure and standards_fail set to true", async () => {
+  const assertInstall = mockInstall();
+  const assertDeepen = mockDeepen();
+  const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
+
+  const exitCode = await runAction(
+    "optic-token",
+    "github-token",
+    "true",
+    "push",
+    "refs/heads/main",
+    undefined,
+    "owner",
+    "repo",
+    "abc123"
+  );
+  expect(exitCode).toBe(1);
+  assertInstall();
+  assertDeepen();
+  assertDiffAll();
+});
+
+test("push event with standards failure but standards_fail set to false", async () => {
+  const assertInstall = mockInstall();
+  const assertDeepen = mockDeepen();
+  const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
+
+  const exitCode = await runAction(
+    "optic-token",
+    "github-token",
+    "false",
     "push",
     "refs/heads/main",
     undefined,
@@ -120,8 +168,13 @@ function mockDeepen(): () => void {
     ]);
 }
 
-function mockDiffAll(token: string, from: string): () => void {
-  jest.mocked(exec.exec).mockResolvedValueOnce(0);
+function mockDiffAll(token: string, from: string, error = false): () => void {
+  if (error) {
+    jest.mocked(exec.exec).mockRejectedValue(new Error("Something broke"));
+  } else {
+    jest.mocked(exec.exec).mockResolvedValueOnce(0);
+  }
+
   return () =>
     expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
       "optic",

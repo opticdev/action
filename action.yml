@@ -7,6 +7,10 @@ inputs:
   github_token:
     description: "A GitHub token that can append comments to a PR"
     required: true
+  standards_fail:
+    description: "Fail the action if a standard fails"
+    required: false
+    default: "true"
 runs:
   using: "node16"
   main: "build/index.js"

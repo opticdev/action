@@ -19,6 +19,7 @@ async function execCommand(
 export async function runAction(
   opticToken: string,
   githubToken: string,
+  standardsFail: string,
   eventName: string | undefined,
   headRef: string | undefined,
   baseRef: string | undefined,
@@ -26,6 +27,8 @@ export async function runAction(
   repo: string | undefined,
   sha: string | undefined
 ): Promise<number> {
+  const failOnCheckError = standardsFail === "true";
+
   const valid = verifyInput(opticToken, eventName, owner, repo);
   if (!valid) {
     return 1;
@@ -85,7 +88,7 @@ export async function runAction(
   }
 
   if (!comparisonRun) {
-    return 1;
+    return failOnCheckError ? 1 : 0;
   }
 
   return 0;
