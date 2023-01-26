@@ -129,43 +129,42 @@ test("push event with standards failure but standards_fail set to false", async 
 function mockInstall(): () => void {
   jest.mocked(exec.exec).mockResolvedValueOnce(0);
   return () =>
-    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", [
-      "install",
-      "--location=global",
-      "@useoptic/optic",
-    ]);
+    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
+      "npm",
+      ["install", "--location=global", "@useoptic/optic"],
+      {}
+    );
 }
 
 function mockFailedInstall(): () => void {
   jest.mocked(exec.exec).mockRejectedValue(new Error("Something broke"));
 
   return () =>
-    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", [
-      "install",
-      "--location=global",
-      "@useoptic/optic",
-    ]);
+    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
+      "npm",
+      ["install", "--location=global", "@useoptic/optic"],
+      {}
+    );
 }
 
 function mockEnsureRef(ref: string): () => void {
   jest.mocked(exec.exec).mockResolvedValueOnce(0);
   return () =>
-    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", [
-      "fetch",
-      "--no-tags",
-      "--depth=1",
-      "origin",
-      ref,
-    ]);
+    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
+      "git",
+      ["fetch", "--no-tags", "--depth=1", "origin", ref],
+      {}
+    );
 }
 
 function mockDeepen(): () => void {
   jest.mocked(exec.exec).mockResolvedValueOnce(0);
   return () =>
-    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", [
-      "fetch",
-      "--deepen=1",
-    ]);
+    expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
+      "git",
+      ["fetch", "--deepen=1"],
+      {}
+    );
 }
 
 function mockDiffAll(token: string, from: string, error = false): () => void {

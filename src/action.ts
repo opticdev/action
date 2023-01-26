@@ -2,13 +2,16 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 
 async function execCommand(
-  ...args: Parameters<typeof exec.exec>
+  command: string,
+  args: string[],
+  options: exec.ExecOptions = {},
+  logError = true
 ): Promise<boolean> {
   try {
-    await exec.exec(...args);
+    await exec.exec(command, args, options);
     return true;
   } catch (e) {
-    if (e instanceof Error) {
+    if (e instanceof Error && logError) {
       core.error(e);
     }
 
@@ -163,12 +166,17 @@ async function deepen(): Promise<boolean> {
 async function diffAll(token: string, from: string): Promise<boolean> {
   core.info("Running Optic diff-all");
 
-  return execCommand("optic", ["diff-all", "--compare-from", from, "--check"], {
-    env: {
-      ...process.env,
-      OPTIC_TOKEN: token,
+  return execCommand(
+    "optic",
+    ["diff-all", "--compare-from", from, "--check"],
+    {
+      env: {
+        ...process.env,
+        OPTIC_TOKEN: token,
+      },
     },
-  });
+    false
+  );
 }
 
 async function prComment(
