@@ -27,12 +27,12 @@ const action_1 = require("../action");
 const exec = __importStar(require("@actions/exec"));
 jest.mock("@actions/exec");
 test("invalid input", async () => {
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "", "", undefined, "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "true", "", "", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(1);
 });
 test("failed install", async () => {
     const assertFailedInstall = mockFailedInstall();
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "true", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(1);
     assertFailedInstall();
 });
@@ -41,7 +41,7 @@ test("pull_request event", async () => {
     const assertEnsureRef = mockEnsureRef("main");
     const assertDiffAll = mockDiffAll("token", "origin/main");
     const assertGitHubComment = mockGitHubComment();
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "pull_request", "refs/pulls/1/merge", "main", "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "true", "pull_request", "refs/pulls/1/merge", "main", "owner", "repo", "abc123");
     expect(exitCode).toBe(0);
     assertInstall();
     assertEnsureRef();
@@ -52,7 +52,27 @@ test("push event", async () => {
     const assertInstall = mockInstall();
     const assertDeepen = mockDeepen();
     const assertDiffAll = mockDiffAll("optic-token", "HEAD~1");
-    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "true", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
+    expect(exitCode).toBe(0);
+    assertInstall();
+    assertDeepen();
+    assertDiffAll();
+});
+test("push event with standards failure and standards_fail set to true", async () => {
+    const assertInstall = mockInstall();
+    const assertDeepen = mockDeepen();
+    const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "true", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
+    expect(exitCode).toBe(1);
+    assertInstall();
+    assertDeepen();
+    assertDiffAll();
+});
+test("push event with standards failure but standards_fail set to false", async () => {
+    const assertInstall = mockInstall();
+    const assertDeepen = mockDeepen();
+    const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
+    const exitCode = await (0, action_1.runAction)("optic-token", "github-token", "false", "push", "refs/heads/main", undefined, "owner", "repo", "abc123");
     expect(exitCode).toBe(0);
     assertInstall();
     assertDeepen();
@@ -60,39 +80,27 @@ test("push event", async () => {
 });
 function mockInstall() {
     jest.mocked(exec.exec).mockResolvedValueOnce(0);
-    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", [
-        "install",
-        "--location=global",
-        "@useoptic/optic",
-    ]);
+    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", ["install", "--location=global", "@useoptic/optic"], {});
 }
 function mockFailedInstall() {
     jest.mocked(exec.exec).mockRejectedValue(new Error("Something broke"));
-    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", [
-        "install",
-        "--location=global",
-        "@useoptic/optic",
-    ]);
+    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("npm", ["install", "--location=global", "@useoptic/optic"], {});
 }
 function mockEnsureRef(ref) {
     jest.mocked(exec.exec).mockResolvedValueOnce(0);
-    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", [
-        "fetch",
-        "--no-tags",
-        "--depth=1",
-        "origin",
-        ref,
-    ]);
+    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", ["fetch", "--no-tags", "--depth=1", "origin", ref], {});
 }
 function mockDeepen() {
     jest.mocked(exec.exec).mockResolvedValueOnce(0);
-    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", [
-        "fetch",
-        "--deepen=1",
-    ]);
+    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("git", ["fetch", "--deepen=1"], {});
 }
-function mockDiffAll(token, from) {
-    jest.mocked(exec.exec).mockResolvedValueOnce(0);
+function mockDiffAll(token, from, error = false) {
+    if (error) {
+        jest.mocked(exec.exec).mockRejectedValue(new Error("Something broke"));
+    }
+    else {
+        jest.mocked(exec.exec).mockResolvedValueOnce(0);
+    }
     return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("optic", ["diff-all", "--compare-from", from, "--check"], expect.objectContaining({
         env: expect.objectContaining({ OPTIC_TOKEN: "optic-token" }),
     }));

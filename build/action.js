@@ -26,19 +26,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runAction = void 0;
 const core = __importStar(require("@actions/core"));
 const exec = __importStar(require("@actions/exec"));
-async function execCommand(...args) {
+async function execCommand(command, args, options = {}, logError = true) {
     try {
-        await exec.exec(...args);
+        await exec.exec(command, args, options);
         return true;
     }
     catch (e) {
-        if (e instanceof Error) {
+        if (e instanceof Error && logError) {
             core.error(e);
         }
         return false;
     }
 }
-async function runAction(opticToken, githubToken, eventName, headRef, baseRef, owner, repo, sha) {
+async function runAction(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
+    const failOnCheckError = standardsFail === "true";
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
         return 1;
@@ -77,14 +78,14 @@ async function runAction(opticToken, githubToken, eventName, headRef, baseRef, o
         return 1;
     }
     const comparisonRun = await diffAll(opticToken, from);
-    if (!comparisonRun) {
-        return 1;
-    }
     if (eventName === "pull_request") {
         const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
         if (!commentResult) {
             return 1;
         }
+    }
+    if (!comparisonRun) {
+        return failOnCheckError ? 1 : 0;
     }
     return 0;
 }
@@ -138,7 +139,7 @@ async function diffAll(token, from) {
     core.info("Running Optic diff-all");
     return execCommand("optic", ["diff-all", "--compare-from", from, "--check"], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
-    });
+    }, false);
 }
 async function prComment(githubToken, owner, repo, pr, sha) {
     core.info("Commenting on PR");
