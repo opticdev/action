@@ -15,8 +15,8 @@ To create a new release:
 - Run the following to update the current version tag:
 
 ```
-git tag v1
-git push --tags
+git tag v1 --force
+git push --tags --force
 ```
 
 ## LICENSE
