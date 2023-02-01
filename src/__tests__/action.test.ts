@@ -177,7 +177,7 @@ function mockDiffAll(token: string, from: string, error = false): () => void {
   return () =>
     expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
       "optic",
-      ["diff-all", "--compare-from", from, "--check"],
+      ["diff-all", "--compare-from", from, "--check", "--upload"],
       expect.objectContaining({
         env: expect.objectContaining({ OPTIC_TOKEN: "optic-token" }),
       })
