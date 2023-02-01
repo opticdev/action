@@ -168,7 +168,7 @@ async function diffAll(token: string, from: string): Promise<boolean> {
 
   return execCommand(
     "optic",
-    ["diff-all", "--compare-from", from, "--check"],
+    ["diff-all", "--compare-from", from, "--check", "--upload"],
     {
       env: {
         ...process.env,
