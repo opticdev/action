@@ -101,7 +101,7 @@ function mockDiffAll(token, from, error = false) {
     else {
         jest.mocked(exec.exec).mockResolvedValueOnce(0);
     }
-    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("optic", ["diff-all", "--compare-from", from, "--check"], expect.objectContaining({
+    return () => expect(jest.mocked(exec.exec)).toHaveBeenCalledWith("optic", ["diff-all", "--compare-from", from, "--check", "--upload"], expect.objectContaining({
         env: expect.objectContaining({ OPTIC_TOKEN: "optic-token" }),
     }));
 }

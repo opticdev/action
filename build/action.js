@@ -137,7 +137,7 @@ async function deepen() {
 }
 async function diffAll(token, from) {
     core.info("Running Optic diff-all");
-    return execCommand("optic", ["diff-all", "--compare-from", from, "--check"], {
+    return execCommand("optic", ["diff-all", "--compare-from", from, "--check", "--upload"], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
     }, false);
 }
