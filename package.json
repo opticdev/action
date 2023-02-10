@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf build && rm -f tsconfig.tsbuildinfo",
-    "build": "yarn run tsc --build --verbose && ncc build src/index.ts -o build",
+    "build": "yarn run tsc && ncc build src/index.ts -o build",
     "ci:build": "yarn build",
     "test": "ENVIRONMENT=test yarn jest",
     "ci:test": "yarn test",
