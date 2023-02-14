@@ -1,228 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 834:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.runAction = void 0;
-const core = __importStar(__nccwpck_require__(186));
-const exec = __importStar(__nccwpck_require__(514));
-async function execCommand(command, args, options = {}, logError = true) {
-    try {
-        await exec.exec(command, args, options);
-        return true;
-    }
-    catch (e) {
-        if (e instanceof Error && logError) {
-            core.error(e);
-        }
-        return false;
-    }
-}
-async function runAction(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
-    const failOnCheckError = standardsFail === "true";
-    const valid = verifyInput(opticToken, eventName, owner, repo);
-    if (!valid) {
-        return 1;
-    }
-    let pr = "";
-    if (eventName === "pull_request") {
-        const prFromRef = headRef === null || headRef === void 0 ? void 0 : headRef.split("/")[2];
-        if (!prFromRef) {
-            core.error("Could not read PR number from ref");
-            return 1;
-        }
-        pr = prFromRef;
-    }
-    const installed = await install();
-    if (!installed) {
-        return 1;
-    }
-    let from = "";
-    if (eventName === "pull_request") {
-        const fromBranch = baseRef || "";
-        from = `origin/${fromBranch}`;
-        if (!(await ensureRef(fromBranch))) {
-            core.error(`Unable to fetch ${from}`);
-            return 1;
-        }
-    }
-    else if (eventName === "push") {
-        from = "HEAD~1";
-        if (!(await deepen())) {
-            core.error("Unable to fetch HEAD~1");
-            return 1;
-        }
-    }
-    if (from === "") {
-        core.error("Unable to determine base for comparison.");
-        return 1;
-    }
-    const comparisonRun = await diffAll(opticToken, from);
-    if (eventName === "pull_request") {
-        const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
-        if (!commentResult) {
-            return 1;
-        }
-    }
-    if (!comparisonRun) {
-        return failOnCheckError ? 1 : 0;
-    }
-    return 0;
-}
-exports.runAction = runAction;
-function verifyInput(token, eventName, owner, repo) {
-    if (!token) {
-        core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
-        return false;
-    }
-    if (eventName !== "push" && eventName !== "pull_request") {
-        core.error("Only 'push' and 'pull_request' events are supported.");
-        return false;
-    }
-    if (!owner) {
-        core.error("Repository owner is required but was not retreived from the environment");
-        return false;
-    }
-    if (!repo) {
-        core.error("Repo is required but was not retreived from the environment");
-        return false;
-    }
-    return true;
-}
-async function install() {
-    core.info("Installing optic");
-    return execCommand("npm", [
-        "install",
-        "--location=global",
-        "@useoptic/optic",
-    ]);
-}
-async function ensureRef(ref) {
-    if (!(await execCommand("git", [
-        "fetch",
-        "--no-tags",
-        "--depth=1",
-        "origin",
-        ref,
-    ]))) {
-        return false;
-    }
-    return true;
-}
-async function deepen() {
-    if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
-        return false;
-    }
-    return true;
-}
-async function diffAll(token, from) {
-    core.info("Running Optic diff-all");
-    return execCommand("optic", ["diff-all", "--compare-from", from, "--check", "--upload"], {
-        env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
-    }, false);
-}
-async function prComment(githubToken, owner, repo, pr, sha) {
-    core.info("Commenting on PR");
-    return execCommand("optic", [
-        "ci",
-        "comment",
-        "--provider",
-        "github",
-        "--owner",
-        owner,
-        "--repo",
-        repo,
-        "--pull-request",
-        pr,
-        "--sha",
-        sha,
-    ], {
-        env: Object.assign(Object.assign({}, process.env), { GITHUB_TOKEN: githubToken }),
-    });
-}
-//# sourceMappingURL=action.js.map
-
-/***/ }),
-
-/***/ 667:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(186));
-const action_1 = __nccwpck_require__(834);
-const opticToken = core.getInput("optic_token");
-const githubToken = core.getInput("github_token");
-const standardsFail = core.getInput("standards_fail");
-const eventName = process.env.GITHUB_EVENT_NAME;
-const headRef = process.env.GITHUB_REF;
-const baseRef = process.env.GITHUB_BASE_REF;
-const owner = process.env.GITHUB_REPOSITORY_OWNER;
-const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
-const sha = process.env.GITHUB_SHA;
-(0, action_1.runAction)(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha)
-    .then((exitCode) => {
-    return process.exit(exitCode);
-})
-    .catch(() => {
-    return process.exit(1);
-});
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
 /***/ 351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -4177,6 +3955,228 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 672:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.runAction = void 0;
+const core = __importStar(__nccwpck_require__(186));
+const exec = __importStar(__nccwpck_require__(514));
+async function execCommand(command, args, options = {}, logError = true) {
+    try {
+        await exec.exec(command, args, options);
+        return true;
+    }
+    catch (e) {
+        if (e instanceof Error && logError) {
+            core.error(e);
+        }
+        return false;
+    }
+}
+async function runAction(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
+    const failOnCheckError = standardsFail === "true";
+    const valid = verifyInput(opticToken, eventName, owner, repo);
+    if (!valid) {
+        return 1;
+    }
+    let pr = "";
+    if (eventName === "pull_request") {
+        const prFromRef = headRef === null || headRef === void 0 ? void 0 : headRef.split("/")[2];
+        if (!prFromRef) {
+            core.error("Could not read PR number from ref");
+            return 1;
+        }
+        pr = prFromRef;
+    }
+    const installed = await install();
+    if (!installed) {
+        return 1;
+    }
+    let from = "";
+    if (eventName === "pull_request") {
+        const fromBranch = baseRef || "";
+        from = `origin/${fromBranch}`;
+        if (!(await ensureRef(fromBranch))) {
+            core.error(`Unable to fetch ${from}`);
+            return 1;
+        }
+    }
+    else if (eventName === "push") {
+        from = "HEAD~1";
+        if (!(await deepen())) {
+            core.error("Unable to fetch HEAD~1");
+            return 1;
+        }
+    }
+    if (from === "") {
+        core.error("Unable to determine base for comparison.");
+        return 1;
+    }
+    const comparisonRun = await diffAll(opticToken, from);
+    if (eventName === "pull_request") {
+        const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
+        if (!commentResult) {
+            return 1;
+        }
+    }
+    if (!comparisonRun) {
+        return failOnCheckError ? 1 : 0;
+    }
+    return 0;
+}
+exports.runAction = runAction;
+function verifyInput(token, eventName, owner, repo) {
+    if (!token) {
+        core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
+        return false;
+    }
+    if (eventName !== "push" && eventName !== "pull_request") {
+        core.error("Only 'push' and 'pull_request' events are supported.");
+        return false;
+    }
+    if (!owner) {
+        core.error("Repository owner is required but was not retreived from the environment");
+        return false;
+    }
+    if (!repo) {
+        core.error("Repo is required but was not retreived from the environment");
+        return false;
+    }
+    return true;
+}
+async function install() {
+    core.info("Installing optic");
+    return execCommand("npm", [
+        "install",
+        "--location=global",
+        "@useoptic/optic",
+    ]);
+}
+async function ensureRef(ref) {
+    if (!(await execCommand("git", [
+        "fetch",
+        "--no-tags",
+        "--depth=1",
+        "origin",
+        ref,
+    ]))) {
+        return false;
+    }
+    return true;
+}
+async function deepen() {
+    if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
+        return false;
+    }
+    return true;
+}
+async function diffAll(token, from) {
+    core.info("Running Optic diff-all");
+    return execCommand("optic", ["diff-all", "--compare-from", from, "--check", "--upload"], {
+        env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
+    }, false);
+}
+async function prComment(githubToken, owner, repo, pr, sha) {
+    core.info("Commenting on PR");
+    return execCommand("optic", [
+        "ci",
+        "comment",
+        "--provider",
+        "github",
+        "--owner",
+        owner,
+        "--repo",
+        repo,
+        "--pull-request",
+        pr,
+        "--sha",
+        sha,
+    ], {
+        env: Object.assign(Object.assign({}, process.env), { GITHUB_TOKEN: githubToken }),
+    });
+}
+
+
+/***/ }),
+
+/***/ 144:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(186));
+const action_1 = __nccwpck_require__(672);
+const opticToken = core.getInput("optic_token");
+const githubToken = core.getInput("github_token");
+const standardsFail = core.getInput("standards_fail");
+const eventName = process.env.GITHUB_EVENT_NAME;
+const headRef = process.env.GITHUB_REF;
+const baseRef = process.env.GITHUB_BASE_REF;
+const owner = process.env.GITHUB_REPOSITORY_OWNER;
+const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
+const sha = process.env.GITHUB_SHA;
+(0, action_1.runAction)(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha)
+    .then((exitCode) => {
+    return process.exit(exitCode);
+})
+    .catch(() => {
+    return process.exit(1);
+});
+
+
+/***/ }),
+
 /***/ 491:
 /***/ ((module) => {
 
@@ -4331,7 +4331,7 @@ module.exports = require("util");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(667);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(144);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

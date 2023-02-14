@@ -1,2 +1,0 @@
-export declare function runAction(opticToken: string, githubToken: string, standardsFail: string, eventName: string | undefined, headRef: string | undefined, baseRef: string | undefined, owner: string | undefined, repo: string | undefined, sha: string | undefined): Promise<number>;
-//# sourceMappingURL=action.d.ts.map
