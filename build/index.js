@@ -3999,7 +3999,7 @@ async function execCommand(command, args, options = {}, logError = true) {
         return false;
     }
 }
-async function runAction(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
+async function runAction(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
     const failOnCheckError = standardsFail === "true";
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
@@ -4038,7 +4038,7 @@ async function runAction(opticToken, githubToken, standardsFail, eventName, head
         core.error("Unable to determine base for comparison.");
         return 1;
     }
-    const comparisonRun = await diffAll(opticToken, from);
+    const comparisonRun = await diffAll(opticToken, from, additionalArgs);
     if (eventName === "pull_request") {
         const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
         if (!commentResult) {
@@ -4096,9 +4096,16 @@ async function deepen() {
     }
     return true;
 }
-async function diffAll(token, from) {
+async function diffAll(token, from, additionalArgs) {
     core.info("Running Optic diff-all");
-    return execCommand("optic", ["diff-all", "--compare-from", from, "--check", "--upload"], {
+    return execCommand("optic", [
+        "diff-all",
+        "--compare-from",
+        from,
+        "--check",
+        "--upload",
+        ...(additionalArgs ? [additionalArgs] : []),
+    ], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
     }, false);
 }
@@ -4160,13 +4167,14 @@ const action_1 = __nccwpck_require__(672);
 const opticToken = core.getInput("optic_token");
 const githubToken = core.getInput("github_token");
 const standardsFail = core.getInput("standards_fail");
+const additionalArgs = core.getInput("additional_args");
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
 const baseRef = process.env.GITHUB_BASE_REF;
 const owner = process.env.GITHUB_REPOSITORY_OWNER;
 const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
 const sha = process.env.GITHUB_SHA;
-(0, action_1.runAction)(opticToken, githubToken, standardsFail, eventName, headRef, baseRef, owner, repo, sha)
+(0, action_1.runAction)(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha)
     .then((exitCode) => {
     return process.exit(exitCode);
 })
