@@ -4,6 +4,7 @@ import { runAction } from "./action";
 const opticToken = core.getInput("optic_token");
 const githubToken = core.getInput("github_token");
 const standardsFail = core.getInput("standards_fail");
+const additionalArgs = core.getInput("additional_args");
 
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
@@ -15,6 +16,7 @@ const sha = process.env.GITHUB_SHA;
 runAction(
   opticToken,
   githubToken,
+  additionalArgs,
   standardsFail,
   eventName,
   headRef,
