@@ -11,6 +11,9 @@ inputs:
     description: "Fail the action if a standard fails"
     required: false
     default: "true"
+  additional_args:
+    description: "Additional arguments to pass into `diff-all`"
+    required: false
 runs:
   using: "node16"
   main: "build/index.js"

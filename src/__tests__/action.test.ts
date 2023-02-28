@@ -7,6 +7,7 @@ test("invalid input", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
     "true",
     "",
     "",
@@ -24,6 +25,7 @@ test("failed install", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
     "true",
     "push",
     "refs/heads/main",
@@ -45,6 +47,7 @@ test("pull_request event", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
     "true",
     "pull_request",
     "refs/pulls/1/merge",
@@ -68,6 +71,32 @@ test("push event", async () => {
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
+    "true",
+    "push",
+    "refs/heads/main",
+    undefined,
+    "owner",
+    "repo",
+    "abc123"
+  );
+  expect(exitCode).toBe(0);
+  assertInstall();
+  assertDeepen();
+  assertDiffAll();
+});
+
+test("push event with additional-args", async () => {
+  const assertInstall = mockInstall();
+  const assertDeepen = mockDeepen();
+  const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", false, [
+    "--fail-on-untracked-openapi",
+  ]);
+
+  const exitCode = await runAction(
+    "optic-token",
+    "github-token",
+    "--fail-on-untracked-openapi",
     "true",
     "push",
     "refs/heads/main",
@@ -90,6 +119,7 @@ test("push event with standards failure and standards_fail set to true", async (
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
     "true",
     "push",
     "refs/heads/main",
@@ -112,6 +142,7 @@ test("push event with standards failure but standards_fail set to false", async 
   const exitCode = await runAction(
     "optic-token",
     "github-token",
+    "",
     "false",
     "push",
     "refs/heads/main",
@@ -167,7 +198,12 @@ function mockDeepen(): () => void {
     );
 }
 
-function mockDiffAll(token: string, from: string, error = false): () => void {
+function mockDiffAll(
+  token: string,
+  from: string,
+  error = false,
+  additionalArgs: string[] = []
+): () => void {
   if (error) {
     jest.mocked(exec.exec).mockRejectedValue(new Error("Something broke"));
   } else {
@@ -177,7 +213,14 @@ function mockDiffAll(token: string, from: string, error = false): () => void {
   return () =>
     expect(jest.mocked(exec.exec)).toHaveBeenCalledWith(
       "optic",
-      ["diff-all", "--compare-from", from, "--check", "--upload"],
+      [
+        "diff-all",
+        "--compare-from",
+        from,
+        "--check",
+        "--upload",
+        ...additionalArgs,
+      ],
       expect.objectContaining({
         env: expect.objectContaining({ OPTIC_TOKEN: "optic-token" }),
       })
