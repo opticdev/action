@@ -14,7 +14,8 @@ test("invalid input", async () => {
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    ""
   );
   expect(exitCode).toBe(1);
 });
@@ -32,7 +33,8 @@ test("failed install", async () => {
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(1);
   assertFailedInstall();
@@ -54,7 +56,8 @@ test("pull_request event", async () => {
     "main",
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(0);
   assertInstall();
@@ -78,7 +81,8 @@ test("push event", async () => {
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(0);
   assertInstall();
@@ -103,7 +107,8 @@ test("push event with additional-args", async () => {
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(0);
   assertInstall();
@@ -126,7 +131,8 @@ test("push event with standards failure and standards_fail set to true", async (
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(1);
   assertInstall();
@@ -149,7 +155,8 @@ test("push event with standards failure but standards_fail set to false", async 
     undefined,
     "owner",
     "repo",
-    "abc123"
+    "abc123",
+    "main"
   );
   expect(exitCode).toBe(0);
   assertInstall();
@@ -219,6 +226,8 @@ function mockDiffAll(
         from,
         "--check",
         "--upload",
+        "--tag",
+        "gitbranch:main",
         ...additionalArgs,
       ],
       expect.objectContaining({

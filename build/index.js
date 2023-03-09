@@ -3999,7 +3999,7 @@ async function execCommand(command, args, options = {}, logError = true) {
         return false;
     }
 }
-async function runAction(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha) {
+async function runAction(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName) {
     const failOnCheckError = standardsFail === "true";
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
@@ -4038,7 +4038,8 @@ async function runAction(opticToken, githubToken, additionalArgs, standardsFail,
         core.error("Unable to determine base for comparison.");
         return 1;
     }
-    const comparisonRun = await diffAll(opticToken, from, additionalArgs);
+    const tag = refName ? `gitbranch:${refName}` : undefined;
+    const comparisonRun = await diffAll(opticToken, from, additionalArgs, tag);
     if (eventName === "pull_request") {
         const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
         if (!commentResult) {
@@ -4096,7 +4097,7 @@ async function deepen() {
     }
     return true;
 }
-async function diffAll(token, from, additionalArgs) {
+async function diffAll(token, from, additionalArgs, tag) {
     core.info("Running Optic diff-all");
     return execCommand("optic", [
         "diff-all",
@@ -4104,6 +4105,7 @@ async function diffAll(token, from, additionalArgs) {
         from,
         "--check",
         "--upload",
+        ...(tag ? ["--tag", tag] : []),
         ...(additionalArgs ? [additionalArgs] : []),
     ], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
@@ -4171,10 +4173,11 @@ const additionalArgs = core.getInput("additional_args");
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
 const baseRef = process.env.GITHUB_BASE_REF;
+const refName = process.env.GITHUB_REF_NAME;
 const owner = process.env.GITHUB_REPOSITORY_OWNER;
 const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
 const sha = process.env.GITHUB_SHA;
-(0, action_1.runAction)(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha)
+(0, action_1.runAction)(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName)
     .then((exitCode) => {
     return process.exit(exitCode);
 })
