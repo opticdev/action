@@ -4038,8 +4038,8 @@ async function runAction(opticToken, githubToken, additionalArgs, standardsFail,
         core.error("Unable to determine base for comparison.");
         return 1;
     }
-    const tag = refName ? `gitbranch:${refName}` : undefined;
-    const comparisonRun = await diffAll(opticToken, from, additionalArgs, tag);
+    const headTag = refName ? `gitbranch:${refName}` : undefined;
+    const comparisonRun = await diffAll(opticToken, from, additionalArgs, headTag);
     if (eventName === "pull_request") {
         const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
         if (!commentResult) {
@@ -4097,7 +4097,7 @@ async function deepen() {
     }
     return true;
 }
-async function diffAll(token, from, additionalArgs, tag) {
+async function diffAll(token, from, additionalArgs, headTag) {
     core.info("Running Optic diff-all");
     return execCommand("optic", [
         "diff-all",
@@ -4105,7 +4105,7 @@ async function diffAll(token, from, additionalArgs, tag) {
         from,
         "--check",
         "--upload",
-        ...(tag ? ["--tag", tag] : []),
+        ...(headTag ? ["--head-tag", headTag] : []),
         ...(additionalArgs ? [additionalArgs] : []),
     ], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),

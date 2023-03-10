@@ -226,7 +226,7 @@ function mockDiffAll(
         from,
         "--check",
         "--upload",
-        "--tag",
+        "--head-tag",
         "gitbranch:main",
         ...additionalArgs,
       ],

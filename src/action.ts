@@ -77,9 +77,16 @@ export async function runAction(
     return 1;
   }
 
-  const tag: string | undefined = refName ? `gitbranch:${refName}` : undefined;
+  const headTag: string | undefined = refName
+    ? `gitbranch:${refName}`
+    : undefined;
 
-  const comparisonRun = await diffAll(opticToken, from, additionalArgs, tag);
+  const comparisonRun = await diffAll(
+    opticToken,
+    from,
+    additionalArgs,
+    headTag
+  );
 
   if (eventName === "pull_request") {
     const commentResult = await prComment(
@@ -171,7 +178,7 @@ async function diffAll(
   token: string,
   from: string,
   additionalArgs: string | undefined,
-  tag: string | undefined
+  headTag: string | undefined
 ): Promise<boolean> {
   core.info("Running Optic diff-all");
 
@@ -183,7 +190,7 @@ async function diffAll(
       from,
       "--check",
       "--upload",
-      ...(tag ? ["--tag", tag] : []),
+      ...(headTag ? ["--head-tag", headTag] : []),
       ...(additionalArgs ? [additionalArgs] : []),
     ],
     {
