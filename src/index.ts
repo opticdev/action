@@ -5,6 +5,8 @@ const opticToken = core.getInput("optic_token");
 const githubToken = core.getInput("github_token");
 const standardsFail = core.getInput("standards_fail");
 const additionalArgs = core.getInput("additional_args");
+const compareFromPush = core.getInput("compare_from_push");
+const compareFromPr = core.getInput("compare_from_pr");
 
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
@@ -14,9 +16,7 @@ const owner = process.env.GITHUB_REPOSITORY_OWNER;
 const repo = process.env.GITHUB_REPOSITORY?.split("/")[1];
 const sha = process.env.GITHUB_SHA;
 
-runAction(
-  opticToken,
-  githubToken,
+runAction(opticToken, githubToken, {
   additionalArgs,
   standardsFail,
   eventName,
@@ -25,8 +25,10 @@ runAction(
   owner,
   repo,
   sha,
-  refName
-)
+  refName,
+  compareFromPush,
+  compareFromPr,
+})
   .then((exitCode) => {
     return process.exit(exitCode);
   })

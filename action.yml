@@ -7,6 +7,12 @@ inputs:
   github_token:
     description: "A GitHub token that can append comments to a PR"
     required: true
+  compare_from_push:
+    description: "Set the ref to compare from in push events"
+    required: false
+  compare_from_pr:
+    description: "Set the ref to compare from in pull request events"
+    required: false
   standards_fail:
     description: "Fail the action if a standard fails"
     required: false

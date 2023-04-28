@@ -3999,7 +3999,8 @@ async function execCommand(command, args, options = {}, logError = true) {
         return false;
     }
 }
-async function runAction(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName) {
+async function runAction(opticToken, githubToken, { additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName, compareFromPush, compareFromPr, }) {
+    var _a;
     const failOnCheckError = standardsFail === "true";
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
@@ -4020,25 +4021,30 @@ async function runAction(opticToken, githubToken, additionalArgs, standardsFail,
     }
     let from = "";
     if (eventName === "pull_request") {
-        const fromBranch = baseRef || "";
-        from = `origin/${fromBranch}`;
-        if (!(await ensureRef(fromBranch))) {
+        const fromBranch = (_a = compareFromPr !== null && compareFromPr !== void 0 ? compareFromPr : baseRef) !== null && _a !== void 0 ? _a : "";
+        const ref = await parseAndEnsureRef(fromBranch);
+        if (!ref) {
             core.error(`Unable to fetch ${from}`);
             return 1;
         }
+        from = ref;
     }
     else if (eventName === "push") {
-        from = "HEAD~1";
-        if (!(await deepen())) {
-            core.error("Unable to fetch HEAD~1");
+        const fromBranch = compareFromPush !== null && compareFromPush !== void 0 ? compareFromPush : "HEAD~1";
+        const ref = await parseAndEnsureRef(fromBranch);
+        if (!ref) {
+            core.error(`Unable to fetch ${from}`);
             return 1;
         }
+        from = ref;
     }
     if (from === "") {
         core.error("Unable to determine base for comparison.");
         return 1;
     }
-    const headTag = refName ? `gitbranch:${refName}` : undefined;
+    const headTag = refName
+        ? `gitbranch:${refName}`
+        : undefined;
     const comparisonRun = await diffAll(opticToken, from, additionalArgs, headTag);
     if (eventName === "pull_request") {
         const commentResult = await prComment(githubToken, owner || "", repo || "", pr || "", sha || "");
@@ -4079,23 +4085,29 @@ async function install() {
         "@useoptic/optic",
     ]);
 }
-async function ensureRef(ref) {
-    if (!(await execCommand("git", [
-        "fetch",
-        "--no-tags",
-        "--depth=1",
-        "origin",
-        ref,
-    ]))) {
-        return false;
+async function parseAndEnsureRef(ref) {
+    if (/^cloud:/i.test(ref)) {
+        return ref;
     }
-    return true;
-}
-async function deepen() {
-    if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
-        return false;
+    else if (/^HEAD~/.test(ref)) {
+        const headCountRaw = ref.replace(/^HEAD~/, "");
+        if (!(await execCommand("git", ["fetch", `--deepen=${headCountRaw}`]))) {
+            return false;
+        }
+        return ref;
     }
-    return true;
+    else {
+        if (!(await execCommand("git", [
+            "fetch",
+            "--no-tags",
+            "--depth=1",
+            "origin",
+            ref,
+        ]))) {
+            return false;
+        }
+        return `origin/${ref}`;
+    }
 }
 async function diffAll(token, from, additionalArgs, headTag) {
     core.info("Running Optic diff-all");
@@ -4170,6 +4182,8 @@ const opticToken = core.getInput("optic_token");
 const githubToken = core.getInput("github_token");
 const standardsFail = core.getInput("standards_fail");
 const additionalArgs = core.getInput("additional_args");
+const compareFromPush = core.getInput("compare_from_push");
+const compareFromPr = core.getInput("compare_from_pr");
 const eventName = process.env.GITHUB_EVENT_NAME;
 const headRef = process.env.GITHUB_REF;
 const baseRef = process.env.GITHUB_BASE_REF;
@@ -4177,7 +4191,19 @@ const refName = process.env.GITHUB_REF_NAME;
 const owner = process.env.GITHUB_REPOSITORY_OWNER;
 const repo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split("/")[1];
 const sha = process.env.GITHUB_SHA;
-(0, action_1.runAction)(opticToken, githubToken, additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName)
+(0, action_1.runAction)(opticToken, githubToken, {
+    additionalArgs,
+    standardsFail,
+    eventName,
+    headRef,
+    baseRef,
+    owner,
+    repo,
+    sha,
+    refName,
+    compareFromPush,
+    compareFromPr,
+})
     .then((exitCode) => {
     return process.exit(exitCode);
 })
