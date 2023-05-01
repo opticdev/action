@@ -4,38 +4,38 @@ import * as exec from "@actions/exec";
 jest.mock("@actions/exec");
 
 test("invalid input", async () => {
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "true",
-    "",
-    "",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    ""
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "",
+    headRef: "",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(1);
 });
 
 test("failed install", async () => {
   const assertFailedInstall = mockFailedInstall();
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "true",
-    "push",
-    "refs/heads/main",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(1);
   assertFailedInstall();
 });
@@ -46,19 +46,19 @@ test("pull_request event", async () => {
   const assertDiffAll = mockDiffAll("token", "origin/main");
   const assertGitHubComment = mockGitHubComment();
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "true",
-    "pull_request",
-    "refs/pulls/1/merge",
-    "main",
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "pull_request",
+    headRef: "refs/pulls/1/merge",
+    baseRef: "main",
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(0);
   assertInstall();
   assertEnsureRef();
@@ -71,19 +71,19 @@ test("push event", async () => {
   const assertDeepen = mockDeepen();
   const assertDiffAll = mockDiffAll("optic-token", "HEAD~1");
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "true",
-    "push",
-    "refs/heads/main",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: "main",
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(0);
   assertInstall();
   assertDeepen();
@@ -97,19 +97,19 @@ test("push event with additional-args", async () => {
     "--fail-on-untracked-openapi",
   ]);
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "--fail-on-untracked-openapi",
-    "true",
-    "push",
-    "refs/heads/main",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "--fail-on-untracked-openapi",
+    standardsFail: "true",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(0);
   assertInstall();
   assertDeepen();
@@ -121,19 +121,19 @@ test("push event with standards failure and standards_fail set to true", async (
   const assertDeepen = mockDeepen();
   const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "true",
-    "push",
-    "refs/heads/main",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(1);
   assertInstall();
   assertDeepen();
@@ -145,20 +145,66 @@ test("push event with standards failure but standards_fail set to false", async 
   const assertDeepen = mockDeepen();
   const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
 
-  const exitCode = await runAction(
-    "optic-token",
-    "github-token",
-    "",
-    "false",
-    "push",
-    "refs/heads/main",
-    undefined,
-    "owner",
-    "repo",
-    "abc123",
-    "main"
-  );
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "false",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: undefined,
+  });
   expect(exitCode).toBe(0);
+  assertInstall();
+  assertDeepen();
+  assertDiffAll();
+});
+
+test("push event with compare-from-push override with cloud", async () => {
+  const assertInstall = mockInstall();
+  const assertDiffAll = mockDiffAll("optic-token", "cloud:tag", true);
+
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "push",
+    headRef: "refs/heads/main",
+    baseRef: undefined,
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: "cloud:tag",
+    compareFromPr: undefined,
+  });
+  expect(exitCode).toBe(1);
+  assertInstall();
+  assertDiffAll();
+});
+
+test("pull request event with compare-from-push override with HEAD", async () => {
+  const assertInstall = mockInstall();
+  const assertDeepen = mockDeepen();
+  const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", true);
+
+  const exitCode = await runAction("optic-token", "github-token", {
+    additionalArgs: "",
+    standardsFail: "true",
+    eventName: "pull_request",
+    headRef: "refs/pulls/1/merge",
+    baseRef: "main",
+    owner: "owner",
+    repo: "repo",
+    sha: "abc123",
+    refName: "main",
+    compareFromPush: undefined,
+    compareFromPr: "HEAD~1",
+  });
+  expect(exitCode).toBe(1);
   assertInstall();
   assertDeepen();
   assertDiffAll();

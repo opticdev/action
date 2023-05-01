@@ -22,15 +22,31 @@ async function execCommand(
 export async function runAction(
   opticToken: string,
   githubToken: string,
-  additionalArgs: string | undefined,
-  standardsFail: string,
-  eventName: string | undefined,
-  headRef: string | undefined,
-  baseRef: string | undefined,
-  owner: string | undefined,
-  repo: string | undefined,
-  sha: string | undefined,
-  refName: string | undefined
+  {
+    additionalArgs,
+    standardsFail,
+    eventName,
+    headRef,
+    baseRef,
+    owner,
+    repo,
+    sha,
+    refName,
+    compareFromPush,
+    compareFromPr,
+  }: {
+    additionalArgs: string | undefined;
+    standardsFail: string;
+    eventName: string | undefined;
+    headRef: string | undefined;
+    baseRef: string | undefined;
+    owner: string | undefined;
+    repo: string | undefined;
+    sha: string | undefined;
+    refName: string | undefined;
+    compareFromPush: string | undefined;
+    compareFromPr: string | undefined;
+  }
 ): Promise<number> {
   const failOnCheckError = standardsFail === "true";
 
@@ -57,19 +73,23 @@ export async function runAction(
 
   let from = "";
   if (eventName === "pull_request") {
-    const fromBranch = baseRef || "";
-    from = `origin/${fromBranch}`;
+    const fromBranch = compareFromPr ?? baseRef ?? "";
+    const ref = await parseAndEnsureRef(fromBranch);
 
-    if (!(await ensureRef(fromBranch))) {
+    if (!ref) {
       core.error(`Unable to fetch ${from}`);
       return 1;
     }
+    from = ref;
   } else if (eventName === "push") {
-    from = "HEAD~1";
-    if (!(await deepen())) {
-      core.error("Unable to fetch HEAD~1");
+    const fromBranch = compareFromPush ?? "HEAD~1";
+    const ref = await parseAndEnsureRef(fromBranch);
+
+    if (!ref) {
+      core.error(`Unable to fetch ${from}`);
       return 1;
     }
+    from = ref;
   }
 
   if (from === "") {
@@ -150,28 +170,29 @@ async function install() {
   ]);
 }
 
-async function ensureRef(ref: string): Promise<boolean> {
-  if (
-    !(await execCommand("git", [
-      "fetch",
-      "--no-tags",
-      "--depth=1",
-      "origin",
-      ref,
-    ]))
-  ) {
-    return false;
+async function parseAndEnsureRef(ref: string): Promise<string | false> {
+  if (/^cloud:/i.test(ref)) {
+    return ref;
+  } else if (/^HEAD~/.test(ref)) {
+    const headCountRaw = ref.replace(/^HEAD~/, "");
+    if (!(await execCommand("git", ["fetch", `--deepen=${headCountRaw}`]))) {
+      return false;
+    }
+    return ref;
+  } else {
+    if (
+      !(await execCommand("git", [
+        "fetch",
+        "--no-tags",
+        "--depth=1",
+        "origin",
+        ref,
+      ]))
+    ) {
+      return false;
+    }
+    return `origin/${ref}`;
   }
-
-  return true;
-}
-
-async function deepen(): Promise<boolean> {
-  if (!(await execCommand("git", ["fetch", "--deepen=1"]))) {
-    return false;
-  }
-
-  return true;
 }
 
 async function diffAll(
