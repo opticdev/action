@@ -4000,7 +4000,6 @@ async function execCommand(command, args, options = {}, logError = true) {
     }
 }
 async function runAction(opticToken, githubToken, { additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName, compareFromPush, compareFromPr, }) {
-    var _a;
     const failOnCheckError = standardsFail === "true";
     const valid = verifyInput(opticToken, eventName, owner, repo);
     if (!valid) {
@@ -4021,7 +4020,7 @@ async function runAction(opticToken, githubToken, { additionalArgs, standardsFai
     }
     let from = "";
     if (eventName === "pull_request") {
-        const fromBranch = (_a = compareFromPr !== null && compareFromPr !== void 0 ? compareFromPr : baseRef) !== null && _a !== void 0 ? _a : "";
+        const fromBranch = compareFromPr || baseRef || "";
         const ref = await parseAndEnsureRef(fromBranch);
         if (!ref) {
             core.error(`Unable to fetch ${from}`);
@@ -4030,7 +4029,7 @@ async function runAction(opticToken, githubToken, { additionalArgs, standardsFai
         from = ref;
     }
     else if (eventName === "push") {
-        const fromBranch = compareFromPush !== null && compareFromPush !== void 0 ? compareFromPush : "HEAD~1";
+        const fromBranch = compareFromPush || "HEAD~1";
         const ref = await parseAndEnsureRef(fromBranch);
         if (!ref) {
             core.error(`Unable to fetch ${from}`);
