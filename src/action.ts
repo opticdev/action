@@ -73,7 +73,6 @@ export async function runAction(
 
   let from = "";
   if (eventName === "pull_request") {
-    console.log(compareFromPr, baseRef);
     const fromBranch = compareFromPr || baseRef || "";
     const ref = await parseAndEnsureRef(fromBranch);
 
@@ -83,7 +82,6 @@ export async function runAction(
     }
     from = ref;
   } else if (eventName === "push") {
-    console.log(compareFromPush);
     const fromBranch = compareFromPush || "HEAD~1";
     const ref = await parseAndEnsureRef(fromBranch);
 

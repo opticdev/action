@@ -4020,7 +4020,6 @@ async function runAction(opticToken, githubToken, { additionalArgs, standardsFai
     }
     let from = "";
     if (eventName === "pull_request") {
-        console.log(compareFromPr, baseRef);
         const fromBranch = compareFromPr || baseRef || "";
         const ref = await parseAndEnsureRef(fromBranch);
         if (!ref) {
@@ -4030,7 +4029,6 @@ async function runAction(opticToken, githubToken, { additionalArgs, standardsFai
         from = ref;
     }
     else if (eventName === "push") {
-        console.log(compareFromPush);
         const fromBranch = compareFromPush || "HEAD~1";
         const ref = await parseAndEnsureRef(fromBranch);
         if (!ref) {
