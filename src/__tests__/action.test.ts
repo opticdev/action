@@ -95,10 +95,11 @@ test("push event with additional-args", async () => {
   const assertDeepen = mockDeepen();
   const assertDiffAll = mockDiffAll("optic-token", "HEAD~1", false, [
     "--fail-on-untracked-openapi",
+    "--generated",
   ]);
 
   const exitCode = await runAction("optic-token", "github-token", {
-    additionalArgs: "--fail-on-untracked-openapi",
+    additionalArgs: "--fail-on-untracked-openapi --generated",
     standardsFail: "true",
     eventName: "push",
     headRef: "refs/heads/main",
