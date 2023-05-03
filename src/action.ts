@@ -212,7 +212,7 @@ async function diffAll(
       "--check",
       "--upload",
       ...(headTag ? ["--head-tag", headTag] : []),
-      ...(additionalArgs ? [additionalArgs] : []),
+      ...(additionalArgs ? [...additionalArgs.split(" ")] : []),
     ],
     {
       env: {

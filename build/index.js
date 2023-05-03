@@ -4117,7 +4117,7 @@ async function diffAll(token, from, additionalArgs, headTag) {
         "--check",
         "--upload",
         ...(headTag ? ["--head-tag", headTag] : []),
-        ...(additionalArgs ? [additionalArgs] : []),
+        ...(additionalArgs ? [...additionalArgs.split(" ")] : []),
     ], {
         env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
     }, false);
