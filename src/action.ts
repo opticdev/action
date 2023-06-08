@@ -209,7 +209,7 @@ async function diffAll(
     {
       env: {
         ...process.env,
-        ...(token ? { OPTIC_TOKEN: token }: {}),
+        ...(token ? { OPTIC_TOKEN: token } : {}),
       },
     },
     false
