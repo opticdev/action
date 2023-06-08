@@ -2,8 +2,8 @@ name: "Optic"
 description: "Run Optic against the current commit"
 inputs:
   optic_token:
-    description: "Your organization's Optic token"
-    required: true
+    description: "Your organization's Optic token to use Optic cloud"
+    required: false
   github_token:
     description: "A GitHub token that can append comments to a PR"
     required: true
