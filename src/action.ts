@@ -20,7 +20,7 @@ async function execCommand(
 }
 
 export async function runAction(
-  opticToken: string,
+  opticToken: string | undefined,
   githubToken: string,
   {
     additionalArgs,
@@ -50,7 +50,7 @@ export async function runAction(
 ): Promise<number> {
   const failOnCheckError = standardsFail === "true";
 
-  const valid = verifyInput(opticToken, eventName, owner, repo);
+  const valid = verifyInput(eventName, owner, repo);
   if (!valid) {
     return 1;
   }
@@ -129,18 +129,10 @@ export async function runAction(
 }
 
 function verifyInput(
-  token: string,
   eventName: string | undefined,
   owner: string | undefined,
   repo: string | undefined
 ): boolean {
-  if (!token) {
-    core.error(
-      "No token was provided. You can generate a token through our app at https://app.useoptic.com"
-    );
-    return false;
-  }
-
   if (eventName !== "push" && eventName !== "pull_request") {
     core.error("Only 'push' and 'pull_request' events are supported.");
     return false;
@@ -196,7 +188,7 @@ async function parseAndEnsureRef(ref: string): Promise<string | false> {
 }
 
 async function diffAll(
-  token: string,
+  token: string | undefined,
   from: string,
   additionalArgs: string | undefined,
   headTag: string | undefined
@@ -210,14 +202,14 @@ async function diffAll(
       "--compare-from",
       from,
       "--check",
-      "--upload",
+      ...(token ? ["--upload"] : []),
       ...(headTag ? ["--head-tag", headTag] : []),
       ...(additionalArgs ? [...additionalArgs.split(" ")] : []),
     ],
     {
       env: {
         ...process.env,
-        OPTIC_TOKEN: token,
+        ...(token ? { OPTIC_TOKEN: token } : {}),
       },
     },
     false
