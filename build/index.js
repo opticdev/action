@@ -4001,7 +4001,7 @@ async function execCommand(command, args, options = {}, logError = true) {
 }
 async function runAction(opticToken, githubToken, { additionalArgs, standardsFail, eventName, headRef, baseRef, owner, repo, sha, refName, compareFromPush, compareFromPr, }) {
     const failOnCheckError = standardsFail === "true";
-    const valid = verifyInput(opticToken, eventName, owner, repo);
+    const valid = verifyInput(eventName, owner, repo);
     if (!valid) {
         return 1;
     }
@@ -4057,11 +4057,7 @@ async function runAction(opticToken, githubToken, { additionalArgs, standardsFai
     return 0;
 }
 exports.runAction = runAction;
-function verifyInput(token, eventName, owner, repo) {
-    if (!token) {
-        core.error("No token was provided. You can generate a token through our app at https://app.useoptic.com");
-        return false;
-    }
+function verifyInput(eventName, owner, repo) {
     if (eventName !== "push" && eventName !== "pull_request") {
         core.error("Only 'push' and 'pull_request' events are supported.");
         return false;
@@ -4115,11 +4111,11 @@ async function diffAll(token, from, additionalArgs, headTag) {
         "--compare-from",
         from,
         "--check",
-        "--upload",
+        ...(token ? ["--upload"] : []),
         ...(headTag ? ["--head-tag", headTag] : []),
         ...(additionalArgs ? [...additionalArgs.split(" ")] : []),
     ], {
-        env: Object.assign(Object.assign({}, process.env), { OPTIC_TOKEN: token }),
+        env: Object.assign(Object.assign({}, process.env), (token ? { OPTIC_TOKEN: token } : {})),
     }, false);
 }
 async function prComment(githubToken, owner, repo, pr, sha) {
