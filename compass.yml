@@ -1,0 +1,18 @@
+name: action
+id: ari:cloud:compass:4e6b61f9-966e-45df-a7e4-a34732c9ac54:component/5cf8af03-9ce9-4892-8ff2-85cd73a86fa2/c1adae18-c070-4d79-a4a6-b2ab27dd5bd0
+description: GitHub Action for Optic
+configVersion: 1
+typeId: CAPABILITY
+ownerId: ari:cloud:identity::team/2a95fb33-9faf-4f41-8b90-c9c79d8fb229
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/opticdev/action
+relationships:
+  DEPENDS_ON: []
+labels:
+  - language:javascript
+  - source:github
+customFields: null
